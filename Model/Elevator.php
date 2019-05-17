@@ -20,6 +20,7 @@ class Elevator
     /** @var int */
     const FIRST_FLOOR = 1;
 
+    /** @var int */
     const LAST_FLOOR = 4;
 
     /** @var OutputInterface */
@@ -59,32 +60,99 @@ class Elevator
         return $this->direction;
     }
 
+    /**
+     * @param int $direction
+     * @return self
+     */
+    private function setDirection(int $direction): self
+    {
+        $this->direction = $direction;
+        return $this;
+    }
+
     public function open()
     {
+        $this->sleep(2);
         $this->output->writeln('Открылись двери');
     }
 
     public function close()
     {
+        $this->sleep(2);
         $this->output->writeln('Закрылись двери');
     }
 
+    /**
+     * @param array $passenger
+     */
     public function takePassenger(array $passenger)
     {
+        $this->sleep(2);
         $this->passengers[] = $passenger;
         $this->output->writeln('Подобрал человека на ' . $this->currentFloor . 'м этаже');
     }
 
+    /**
+     * @param array $passenger
+     */
+    public function setDownPassenger(array $passenger)
+    {
+        $this->sleep(2);
+        $passengerStartFloor = reset($passenger);
+        $this->output->writeln('Вышел пассажир зашедший на ' . $passengerStartFloor['startFloor'] . 'м этаже');
+        unset($this->passengers[key($passenger)]);
+    }
+
+    /**
+     * @param array $passenger
+     */
     public function moveTo(array $passenger)
     {
+        $this->sleep(2);
         $this->output->writeln('Принял команду перемещения на ' . $passenger['destFloor'] . ' этаж');
+    }
+
+    /**
+     * @return array|null
+     */
+    public function setDownPassengersOnFloor(): ?array
+    {
+        foreach ($this->passengers as $key => $passenger) {
+            if ($passenger['destFloor'] == $this->getCurrentFloor()) {
+                return [$key => $passenger];
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @return array
+     */
+    public function getPassengers(): array
+    {
+        return $this->passengers;
     }
 
     public function goToDirection()
     {
-        sleep(2);
+        $this->sleep(4);
         $this->direction == ElevatorEnum::DIRECTION_UP ? $this->currentFloor++ : $this->currentFloor--;
         $this->output->writeln('Переместились на ' . $this->currentFloor . ' этаж');
+    }
+
+    public function checkOnTheTopFloor()
+    {
+        if (self::LAST_FLOOR == $this->getCurrentFloor()) {
+            $this->setDirection(ElevatorEnum::DIRECTION_DOWN);
+        }
+    }
+
+    /**
+     * @param int $value
+     */
+    private function sleep(int $value)
+    {
+        sleep($value);
     }
 
     /**
@@ -100,6 +168,9 @@ class Elevator
         return null;
     }
 
+    /**
+     * @param array $passenger
+     */
     public function exitPassenger(array $passenger)
     {
         $key = array_keys($passenger)[0];

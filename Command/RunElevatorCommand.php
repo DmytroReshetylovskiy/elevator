@@ -8,6 +8,10 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * Class RunElevatorCommand
+ * @package Elevator\Command
+ */
 class RunElevatorCommand extends Command
 {
     /** @var Elevator */
@@ -44,30 +48,43 @@ class RunElevatorCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         do {
-            $currentFloor = $this->elevator->getCurrentFloor();
-            if ($currentFloor == $this->getMinPassengerStartFloor()) {
-                $passenger = $this->getPassengerOnFloor($this->elevator->getCurrentFloor());
-                if ($this->elevator->getDirection() === $this->getPassengerDirection($passenger)) {
-                    $this->elevator->open();
-                    $this->elevator->takePassenger($passenger);
-                    $this->elevator->moveTo(reset($passenger));
-                    $this->elevator->close();
-                    unset($this->passengers[key($passenger)]);
+            $this->elevator->checkOnTheTopFloor();
+            if ($this->checkPassengersOnTheFloorAndInTheElevator()) {
+                $this->elevator->open();
+                if ($passengerInElevator = $this->elevator->setDownPassengersOnFloor()) {
+                    $this->elevator->setDownPassenger($passengerInElevator);
                 }
-//                if ($currentFloor == $passenger['destFloor']) {
-//                    var_dump(111);die;
-//                }
+                if ($passengerOnFloor = $this->getPassengerOnFloor($this->elevator->getCurrentFloor())) {
+                    if ($this->elevator->getDirection() === $this->getPassengerDirection($passengerOnFloor)) {
+                        $this->elevator->takePassenger(reset($passengerOnFloor));
+                        $this->elevator->moveTo(reset($passengerOnFloor));
+                        unset($this->passengers[key($passengerOnFloor)]);
+                    }
+                }
+                $this->elevator->close();
+                if (!count($this->passengers) || !count($this->elevator->getPassengers())) {
+                    continue;
+                }
             }
             $this->elevator->goToDirection();
-        } while (count($this->passengers) && $this->elevator);
-
+        } while (count($this->passengers) || count($this->elevator->getPassengers()));
     }
 
-    private function getMinPassengerStartFloor(): int
+    /**
+     * @return bool
+     */
+    private function checkPassengersOnTheFloorAndInTheElevator(): bool
     {
-        return min(array_column($this->passengers, 'startFloor'));
+        $passenger = $this->getPassengerOnFloor($this->elevator->getCurrentFloor());
+        return ($passenger &&
+            ($this->elevator->getDirection() === $this->getPassengerDirection($passenger))) ||
+            $this->elevator->setDownPassengersOnFloor();
     }
 
+    /**
+     * @param int $floor
+     * @return array|null
+     */
     private function getPassengerOnFloor(int $floor): ?array
     {
         foreach ($this->passengers as $key => $passenger) {
@@ -78,7 +95,11 @@ class RunElevatorCommand extends Command
         return null;
     }
 
-    private function getPassengerDirection(array $passenger)
+    /**
+     * @param array $passenger
+     * @return int
+     */
+    private function getPassengerDirection(array $passenger): int
     {
         $passenger = reset($passenger);
         return $passenger['startFloor'] < $passenger['destFloor'] ? ElevatorEnum::DIRECTION_UP : ElevatorEnum::DIRECTION_DOWN;
