@@ -26,3 +26,7 @@ php composer.phar install
 ```sh
 php index.php run
 ```
+
+### Todos
+
+ - Write Tests
