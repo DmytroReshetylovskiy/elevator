@@ -51,6 +51,14 @@ class Elevator
         return $this->currentFloor;
     }
 
+    /**
+     * @return int
+     */
+    public function getDirection(): int
+    {
+        return $this->direction;
+    }
+
     public function open()
     {
         $this->output->writeln('Открылись двери');
@@ -67,14 +75,16 @@ class Elevator
         $this->output->writeln('Подобрал человека на ' . $this->currentFloor . 'м этаже');
     }
 
-    public function moveTo(int $floor)
+    public function moveTo(array $passenger)
     {
-        $this->output->writeln('Принял команду перемещения на ' . $floor . ' этаж');
+        $this->output->writeln('Принял команду перемещения на ' . $passenger['destFloor'] . ' этаж');
     }
 
-    public function goUp()
+    public function goToDirection()
     {
-        $this->currentFloor++;
+        sleep(2);
+        $this->direction == ElevatorEnum::DIRECTION_UP ? $this->currentFloor++ : $this->currentFloor--;
+        $this->output->writeln('Переместились на ' . $this->currentFloor . ' этаж');
     }
 
     /**
