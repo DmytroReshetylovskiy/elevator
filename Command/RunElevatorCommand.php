@@ -2,6 +2,7 @@
 
 namespace Elevator\Command;
 
+use Elevator\Enum\ElevatorEnum;
 use Elevator\Model\Elevator;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -46,20 +47,19 @@ class RunElevatorCommand extends Command
             $currentFloor = $this->elevator->getCurrentFloor();
             if ($currentFloor == $this->getMinPassengerStartFloor()) {
                 $passenger = $this->getPassengerOnFloor($this->elevator->getCurrentFloor());
-                $this->elevator->open();
-                $this->elevator->takePassenger($passenger);
-                $this->elevator->moveTo($passenger[0]['destFloor']);
-                $this->elevator->close();
+                if ($this->elevator->getDirection() === $this->getPassengerDirection($passenger)) {
+                    $this->elevator->open();
+                    $this->elevator->takePassenger($passenger);
+                    $this->elevator->moveTo(reset($passenger));
+                    $this->elevator->close();
+                    unset($this->passengers[key($passenger)]);
+                }
+//                if ($currentFloor == $passenger['destFloor']) {
+//                    var_dump(111);die;
+//                }
             }
-            $this->elevator->goUp();
-            sleep(2);
-            if ($passenger = $this->elevator->getPassengersFloor()) {
-                $this->elevator->open();
-                $this->elevator->exitPassenger($passenger);
-            }
-            var_dump(111);die;
-
-        } while (count($this->passengers));
+            $this->elevator->goToDirection();
+        } while (count($this->passengers) && $this->elevator);
 
     }
 
@@ -76,5 +76,11 @@ class RunElevatorCommand extends Command
             }
         }
         return null;
+    }
+
+    private function getPassengerDirection(array $passenger)
+    {
+        $passenger = reset($passenger);
+        return $passenger['startFloor'] < $passenger['destFloor'] ? ElevatorEnum::DIRECTION_UP : ElevatorEnum::DIRECTION_DOWN;
     }
 }
