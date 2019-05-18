@@ -21,7 +21,7 @@ class Elevator
     const FIRST_FLOOR = 1;
 
     /** @var int */
-    const LAST_FLOOR = 4;
+    const LAST_FLOOR = 10;
 
     /** @var OutputInterface */
     private $output;
@@ -140,7 +140,7 @@ class Elevator
         $this->output->writeln('Переместились на ' . $this->currentFloor . ' этаж');
     }
 
-    public function checkLastFloorInDirection()
+    public function checkLastFloorInDirection(): void
     {
         switch ($this->currentFloor) {
             case self::FIRST_FLOOR:

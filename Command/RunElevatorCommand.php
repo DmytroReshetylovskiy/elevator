@@ -3,6 +3,7 @@
 namespace Elevator\Command;
 
 use Elevator\Enum\ElevatorEnum;
+use Elevator\Enum\PassengerManager;
 use Elevator\Model\Elevator;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -22,12 +23,11 @@ class RunElevatorCommand extends Command
 
     /**
      * RunElevatorCommand constructor.
-     * @param array $passengers
      */
-    public function __construct(array $passengers)
+    public function __construct()
     {
         parent::__construct('run');
-        $this->passengers = $passengers;
+        $this->passengers = PassengerManager::generatePassengers(20);
     }
 
     /**
