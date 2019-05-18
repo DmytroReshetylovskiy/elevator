@@ -70,7 +70,10 @@ class RunElevatorCommand extends Command
         }
     }
 
-    private function checkForUndeliveredPassengers()
+    /**
+     * @return bool
+     */
+    private function checkForUndeliveredPassengers(): bool
     {
         return count($this->passengers) || count($this->elevator->getPassengers());
     }
