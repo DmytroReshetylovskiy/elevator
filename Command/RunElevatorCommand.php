@@ -45,40 +45,53 @@ class RunElevatorCommand extends Command
      * @param OutputInterface $output
      * @return int|void|null
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): void
     {
-        do {
-            $this->elevator->checkOnTheTopFloor();
-            if ($this->checkPassengersOnTheFloorAndInTheElevator()) {
+        while (true) {
+            $this->elevator->checkLastFloorInDirection();
+            $passengerOnFloor = $this->checkPassengersOnTheFloor();
+            $passengerInElevator = $this->checkPassengersInTheElevator();
+            if ($passengerOnFloor || $passengerInElevator) {
                 $this->elevator->open();
-                if ($passengerInElevator = $this->elevator->setDownPassengersOnFloor()) {
+                if ($passengerInElevator) {
                     $this->elevator->setDownPassenger($passengerInElevator);
                 }
-                if ($passengerOnFloor = $this->getPassengerOnFloor($this->elevator->getCurrentFloor())) {
-                    if ($this->elevator->getDirection() === $this->getPassengerDirection($passengerOnFloor)) {
-                        $this->elevator->takePassenger(reset($passengerOnFloor));
-                        $this->elevator->moveTo(reset($passengerOnFloor));
-                        unset($this->passengers[key($passengerOnFloor)]);
-                    }
+                if ($passengerOnFloor) {
+                    $this->elevator->takePassenger(reset($passengerOnFloor));
+                    $this->elevator->moveTo(reset($passengerOnFloor));
+                    unset($this->passengers[key($passengerOnFloor)]);
                 }
                 $this->elevator->close();
-                if (!count($this->passengers) || !count($this->elevator->getPassengers())) {
-                    continue;
-                }
+            }
+            if (!$this->checkForUndeliveredPassengers()) {
+                break;
             }
             $this->elevator->goToDirection();
-        } while (count($this->passengers) || count($this->elevator->getPassengers()));
+        }
+    }
+
+    private function checkForUndeliveredPassengers()
+    {
+        return count($this->passengers) || count($this->elevator->getPassengers());
     }
 
     /**
-     * @return bool
+     * @return array|null
      */
-    private function checkPassengersOnTheFloorAndInTheElevator(): bool
+    private function checkPassengersOnTheFloor(): ?array
     {
-        $passenger = $this->getPassengerOnFloor($this->elevator->getCurrentFloor());
-        return ($passenger &&
-            ($this->elevator->getDirection() === $this->getPassengerDirection($passenger))) ||
-            $this->elevator->setDownPassengersOnFloor();
+        if (($passenger = $this->getPassengerOnFloor($this->elevator->getCurrentFloor())) && ($this->elevator->getDirection() === $this->getPassengerDirection($passenger))) {
+            return $passenger;
+        }
+        return null;
+    }
+
+    /**
+     * @return array|null
+     */
+    private function checkPassengersInTheElevator(): ?array
+    {
+        return $this->elevator->setDownPassengersOnFloor();
     }
 
     /**

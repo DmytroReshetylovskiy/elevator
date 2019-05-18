@@ -70,13 +70,13 @@ class Elevator
         return $this;
     }
 
-    public function open()
+    public function open(): void
     {
         $this->sleep(2);
         $this->output->writeln('Открылись двери');
     }
 
-    public function close()
+    public function close(): void
     {
         $this->sleep(2);
         $this->output->writeln('Закрылись двери');
@@ -85,7 +85,7 @@ class Elevator
     /**
      * @param array $passenger
      */
-    public function takePassenger(array $passenger)
+    public function takePassenger(array $passenger): void
     {
         $this->sleep(2);
         $this->passengers[] = $passenger;
@@ -95,7 +95,7 @@ class Elevator
     /**
      * @param array $passenger
      */
-    public function setDownPassenger(array $passenger)
+    public function setDownPassenger(array $passenger): void
     {
         $this->sleep(2);
         $passengerStartFloor = reset($passenger);
@@ -106,7 +106,7 @@ class Elevator
     /**
      * @param array $passenger
      */
-    public function moveTo(array $passenger)
+    public function moveTo(array $passenger): void
     {
         $this->sleep(2);
         $this->output->writeln('Принял команду перемещения на ' . $passenger['destFloor'] . ' этаж');
@@ -140,17 +140,22 @@ class Elevator
         $this->output->writeln('Переместились на ' . $this->currentFloor . ' этаж');
     }
 
-    public function checkOnTheTopFloor()
+    public function checkLastFloorInDirection()
     {
-        if (self::LAST_FLOOR == $this->getCurrentFloor()) {
-            $this->setDirection(ElevatorEnum::DIRECTION_DOWN);
+        switch ($this->currentFloor) {
+            case self::FIRST_FLOOR:
+                $this->setDirection(ElevatorEnum::DIRECTION_UP);
+                break;
+            case self::LAST_FLOOR:
+                $this->setDirection(ElevatorEnum::DIRECTION_DOWN);
+                break;
         }
     }
 
     /**
      * @param int $value
      */
-    private function sleep(int $value)
+    private function sleep(int $value): void
     {
         sleep($value);
     }
@@ -171,7 +176,7 @@ class Elevator
     /**
      * @param array $passenger
      */
-    public function exitPassenger(array $passenger)
+    public function exitPassenger(array $passenger): void
     {
         $key = array_keys($passenger)[0];
         unset($this->passengers[$key]);
