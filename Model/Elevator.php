@@ -15,13 +15,22 @@ class Elevator
     const SPEED = 1;
 
     /** @var int */
-    const HEIGHT = 4;
+    const DISTANCE = 4;
+
+    /** @var int */
+    const OPENING_AND_CLOSING = 2;
+
+    /** @var int */
+    const TAKE_AND_SET_DOWN = 2;
 
     /** @var int */
     const FIRST_FLOOR = 1;
 
     /** @var int */
     const LAST_FLOOR = 10;
+
+    /** @var int */
+    const MAX_WEIGHT = 700;
 
     /** @var OutputInterface */
     private $output;
@@ -34,6 +43,9 @@ class Elevator
 
     /** @var int */
     private $direction = ElevatorEnum::DIRECTION_UP;
+
+    /** @var int */
+    private $currentWeight = 0;
 
     /**
      * Elevator constructor.
@@ -62,37 +74,81 @@ class Elevator
 
     /**
      * @param int $direction
-     * @return self
+     * @return Elevator
      */
-    private function setDirection(int $direction): self
+    private function setDirection(int $direction): Elevator
     {
         $this->direction = $direction;
         return $this;
     }
 
+    /**
+     * @return array
+     */
+    public function getPassengers(): array
+    {
+        return $this->passengers;
+    }
+
+    /**
+     * @return int
+     */
+    public function getCurrentWeight(): int
+    {
+        return $this->currentWeight;
+    }
+
+    /**
+     * @param int $weight
+     * @return Elevator
+     */
+    public function addWeight(int $weight): Elevator
+    {
+        $this->currentWeight += $weight;
+        return $this;
+    }
+
+    /**
+     * @param int $weight
+     * @return Elevator
+     */
+    public function removeWeight(int $weight): Elevator
+    {
+        $this->currentWeight -= $weight;
+        return $this;
+    }
+
+    public function checkWeight()
+    {
+        return $this->getCurrentWeight() < self::MAX_WEIGHT ? true : false;
+    }
+
     public function open(): void
     {
-        $this->sleep(2);
+        $this->sleep(self::OPENING_AND_CLOSING);
         $this->output->writeln('Открылись двери');
     }
 
     public function close(): void
     {
-        $this->sleep(2);
+        $this->sleep(self::OPENING_AND_CLOSING);
         $this->output->writeln('Закрылись двери');
     }
 
     /**
      * @param array $passengers
      */
-    public function takePassenger(array $passengers): void
+    public function takePassengers(array $passengers): void
     {
-        $this->sleep(2);
+        $this->sleep(self::TAKE_AND_SET_DOWN);
         $this->getPassengerInElevator(count($passengers), ['-го пассажира', '-х пассажиров', ' пассажиров']);
         /** @var  Passenger $passenger */
         foreach ($passengers as $key => $passenger) {
-            $this->passengers[$key] = $passenger;
-            $this->output->writeln('Принял команду перемещения на ' . $passenger->getDestFloor() . ' этаж от пассажира №' . $key);
+            if ($this->checkWeight()) {
+                $this->passengers[$key] = $passenger;
+                $this->output->writeln('Принял команду перемещения на ' . $passenger->getDestFloor() . ' этаж от пассажира №' . $key);
+                $this->addWeight($passenger->getWeight());
+            }
         }
     }
 
@@ -103,19 +159,20 @@ class Elevator
     private function getPassengerInElevator($num, $titles): void
     {
         $cases = [2, 0, 1, 1, 1, 2];
-        $this->output->writeln('Подобрал ' .  $num . $titles[($num % 100 > 4 && $num % 100 < 20) ? 2 : $cases[min($num % 10, 5)]] . ' на ' . $this->currentFloor . 'м этаже');
-        $this->sleep(2);
+        $this->output->writeln('Подобрал ' .  $num . $titles[($num % 100 > 4 && $num % 100 < 20) ? 2 : $cases[min($num % 10, 5)]] . ' на ' . $this->getCurrentFloor() . 'м этаже');
+        $this->sleep(self::TAKE_AND_SET_DOWN);
     }
 
     /**
      * @param array $passengers
      */
-    public function setDownPassenger(array $passengers): void
+    public function setDownPassengers(array $passengers): void
     {
-        $this->sleep(2);
+        $this->sleep(self::TAKE_AND_SET_DOWN);
         /** @var  Passenger $passenger */
         foreach ($passengers as $key => $passenger) {
             $this->output->writeln('Вышел пассажир №' . $key .' зашедший на ' . $passenger->getStartFloor() . 'м этаже');
+            $this->removeWeight($passenger->getWeight());
             unset($this->passengers[$key]);
         }
     }
@@ -134,24 +191,16 @@ class Elevator
         return count($passengers) ? $passengers : null;
     }
 
-    /**
-     * @return array
-     */
-    public function getPassengers(): array
+    public function goToDirection(): void
     {
-        return $this->passengers;
-    }
-
-    public function goToDirection()
-    {
-        $this->sleep(4);
+        $this->sleep(self::DISTANCE / self::SPEED);
         $this->direction == ElevatorEnum::DIRECTION_UP ? $this->currentFloor++ : $this->currentFloor--;
-        $this->output->writeln('Переместились на ' . $this->currentFloor . ' этаж');
+        $this->output->writeln('Переместились на ' . $this->getCurrentFloor() . ' этаж');
     }
 
     public function checkLastFloorInDirection(): void
     {
-        switch ($this->currentFloor) {
+        switch ($this->getCurrentFloor()) {
             case self::FIRST_FLOOR:
                 $this->setDirection(ElevatorEnum::DIRECTION_UP);
                 break;

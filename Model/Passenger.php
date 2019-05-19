@@ -20,6 +20,9 @@ class Passenger
     /** @var int */
     private $status;
 
+    /** @var int */
+    private $weight = 70;
+
     /**
      * Passenger constructor.
      * @param int $startFloor
@@ -79,6 +82,14 @@ class Passenger
     public function setStatus($status): void
     {
         $this->status = $status;
+    }
+
+    /**
+     * @return int
+     */
+    public function getWeight(): int
+    {
+        return $this->weight;
     }
 
     /**

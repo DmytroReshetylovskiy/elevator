@@ -51,13 +51,13 @@ class RunElevatorCommand extends Command
             $this->elevator->checkLastFloorInDirection();
             $passengersOnFloor = $this->checkPassengersOnTheFloor();
             $passengersInElevator = $this->checkPassengersInTheElevator();
-            if ($passengersOnFloor || $passengersInElevator) {
+            if (($passengersOnFloor || $passengersInElevator)/* && $this->elevator->checkWeight()*/) {
                 $this->elevator->open();
                 if ($passengersInElevator) {
-                    $this->elevator->setDownPassenger($passengersInElevator);
+                    $this->elevator->setDownPassengers($passengersInElevator);
                 }
                 if ($passengersOnFloor) {
-                    $this->elevator->takePassenger($passengersOnFloor);
+                    $this->elevator->takePassengers($passengersOnFloor);
                     $this->passengers->deletePassengers(array_keys($passengersOnFloor));
                 }
                 $this->elevator->close();
