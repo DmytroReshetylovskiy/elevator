@@ -26,7 +26,7 @@ class Elevator
     /** @var OutputInterface */
     private $output;
 
-    /** @var array */
+    /** @var Passenger[] */
     private $passengers = [];
 
     /** @var int */
@@ -83,13 +83,28 @@ class Elevator
     }
 
     /**
-     * @param array $passenger
+     * @param array $passengers
      */
-    public function takePassenger(array $passenger): void
+    public function takePassenger(array $passengers): void
     {
         $this->sleep(2);
-        $this->passengers[] = $passenger;
-        $this->output->writeln('Подобрал человека на ' . $this->currentFloor . 'м этаже');
+        $this->getPassengerInElevator(count($passengers), ['-го пассажира', '-х пассажиров', ' пассажиров']);
+        /** @var  Passenger $passenger */
+        foreach ($passengers as $key => $passenger) {
+            $this->passengers[$key] = $passenger;
+            $this->output->writeln('Принял команду перемещения на ' . $passenger->getDestFloor() . ' этаж от пассажира #' . $key);
+        }
+    }
+
+    /**
+     * @param $num
+     * @param $titles
+     */
+    private function getPassengerInElevator($num, $titles): void
+    {
+        $cases = [2, 0, 1, 1, 1, 2];
+        $this->output->writeln('Подобрал ' .  $num . $titles[($num % 100 > 4 && $num % 100 < 20) ? 2 : $cases[min($num % 10, 5)]] . ' на ' . $this->currentFloor . 'м этаже');
+        $this->sleep(2);
     }
 
     /**
@@ -101,15 +116,6 @@ class Elevator
         $passengerStartFloor = reset($passenger);
         $this->output->writeln('Вышел пассажир зашедший на ' . $passengerStartFloor['startFloor'] . 'м этаже');
         unset($this->passengers[key($passenger)]);
-    }
-
-    /**
-     * @param array $passenger
-     */
-    public function moveTo(array $passenger): void
-    {
-        $this->sleep(2);
-        $this->output->writeln('Принял команду перемещения на ' . $passenger['destFloor'] . ' этаж');
     }
 
     /**
@@ -171,15 +177,5 @@ class Elevator
             }
         }
         return null;
-    }
-
-    /**
-     * @param array $passenger
-     */
-    public function exitPassenger(array $passenger): void
-    {
-        $key = array_keys($passenger)[0];
-        unset($this->passengers[$key]);
-        $this->output->writeln('');
     }
 }

@@ -1,8 +1,8 @@
 <?php
 
-namespace Elevator\Enum;
+namespace Elevator\Model;
 
-use Elevator\Model\Passenger;
+use Elevator\Enum\PassengerStatusEnum;
 
 /**
  * Class PassengerManager
@@ -12,6 +12,9 @@ class PassengerManager
 {
     /** @var PassengerManager */
     private static $instance;
+
+    /** @var Passenger[] */
+    private $passengers = [];
 
     /**
      * @return PassengerManager
@@ -29,9 +32,6 @@ class PassengerManager
         //
     }
 
-    /** @var Passenger[] */
-    private $passengers = [];
-
     /**
      * @return Passenger[]
      */
@@ -46,6 +46,11 @@ class PassengerManager
     public function addPassenger(Passenger $passenger): void
     {
         array_push($this->passengers, $passenger);
+    }
+
+    public function deletePassengers(array $passengers)
+    {
+        var_dump($passengers);die;
     }
 
     /**
@@ -65,6 +70,5 @@ class PassengerManager
         }
         return $passengerManager;
     }
-
-
 }
+
