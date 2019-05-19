@@ -92,7 +92,7 @@ class Elevator
         /** @var  Passenger $passenger */
         foreach ($passengers as $key => $passenger) {
             $this->passengers[$key] = $passenger;
-            $this->output->writeln('Принял команду перемещения на ' . $passenger->getDestFloor() . ' этаж от пассажира #' . $key);
+            $this->output->writeln('Принял команду перемещения на ' . $passenger->getDestFloor() . ' этаж от пассажира №' . $key);
         }
     }
 
@@ -108,14 +108,16 @@ class Elevator
     }
 
     /**
-     * @param array $passenger
+     * @param array $passengers
      */
-    public function setDownPassenger(array $passenger): void
+    public function setDownPassenger(array $passengers): void
     {
         $this->sleep(2);
-        $passengerStartFloor = reset($passenger);
-        $this->output->writeln('Вышел пассажир зашедший на ' . $passengerStartFloor['startFloor'] . 'м этаже');
-        unset($this->passengers[key($passenger)]);
+        /** @var  Passenger $passenger */
+        foreach ($passengers as $key => $passenger) {
+            $this->output->writeln('Вышел пассажир №' . $key .' зашедший на ' . $passenger->getStartFloor() . 'м этаже');
+            unset($this->passengers[$key]);
+        }
     }
 
     /**
@@ -123,12 +125,13 @@ class Elevator
      */
     public function setDownPassengersOnFloor(): ?array
     {
+        $passengers = [];
         foreach ($this->passengers as $key => $passenger) {
-            if ($passenger['destFloor'] == $this->getCurrentFloor()) {
-                return [$key => $passenger];
+            if ($passenger->getDestFloor() == $this->getCurrentFloor()) {
+                $passengers[$key] = $passenger;
             }
         }
-        return null;
+        return count($passengers) ? $passengers : null;
     }
 
     /**
@@ -164,18 +167,5 @@ class Elevator
     private function sleep(int $value): void
     {
         sleep($value);
-    }
-
-    /**
-     * @return array|null
-     */
-    public function getPassengersFloor(): ?array
-    {
-        foreach ($this->passengers as $key => $passenger) {
-            if ($passenger['destFloor'] == $this->currentFloor) {
-                return [$key => $passenger];
-            }
-        }
-        return null;
     }
 }

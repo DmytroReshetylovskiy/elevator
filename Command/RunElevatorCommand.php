@@ -58,7 +58,7 @@ class RunElevatorCommand extends Command
                 }
                 if ($passengersOnFloor) {
                     $this->elevator->takePassenger($passengersOnFloor);
-                    $this->passengers->deletePassengers($passengersOnFloor);
+                    $this->passengers->deletePassengers(array_keys($passengersOnFloor));
                 }
                 $this->elevator->close();
             }

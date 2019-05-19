@@ -48,9 +48,11 @@ class PassengerManager
         array_push($this->passengers, $passenger);
     }
 
-    public function deletePassengers(array $passengers)
+    public function deletePassengers(array $passengersIds)
     {
-        var_dump($passengers);die;
+        foreach ($passengersIds as $passengerId) {
+            unset($this->passengers[$passengerId]);
+        }
     }
 
     /**
