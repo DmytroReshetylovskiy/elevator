@@ -2,8 +2,9 @@
 
 namespace Elevator\Command;
 
-use Elevator\Enum\ElevatorEnum;
+use Elevator\Model\PassengerManager;
 use Elevator\Model\Elevator;
+use Elevator\Model\Passenger;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -17,27 +18,27 @@ class RunElevatorCommand extends Command
     /** @var Elevator */
     private $elevator;
 
-    /** @var array */
+    /** @var Passenger[] */
     private $passengers = [];
 
     /**
      * RunElevatorCommand constructor.
-     * @param array $passengers
      */
-    public function __construct(array $passengers)
+    public function __construct()
     {
         parent::__construct('run');
-        $this->passengers = $passengers;
+        $this->passengers = PassengerManager::generatePassengers(20);
     }
 
     /**
      * @param InputInterface $input
      * @param OutputInterface $output
      */
-    protected function initialize(InputInterface $input, OutputInterface $output)
+    protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
         $this->elevator = new Elevator($output);
+        $this->showPassengers($output);
     }
 
     /**
@@ -45,63 +46,82 @@ class RunElevatorCommand extends Command
      * @param OutputInterface $output
      * @return int|void|null
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): void
     {
-        do {
-            $this->elevator->checkOnTheTopFloor();
-            if ($this->checkPassengersOnTheFloorAndInTheElevator()) {
+        while (true) {
+            $this->elevator->checkLastFloorInDirection();
+            $passengersOnFloor = $this->checkPassengersOnTheFloor();
+            $passengersInElevator = $this->checkPassengersInTheElevator();
+            if (($passengersOnFloor && $this->elevator->checkWeight()) || $passengersInElevator) {
                 $this->elevator->open();
-                if ($passengerInElevator = $this->elevator->setDownPassengersOnFloor()) {
-                    $this->elevator->setDownPassenger($passengerInElevator);
+                if ($passengersInElevator) {
+                    $this->elevator->setDownPassengers($passengersInElevator);
                 }
-                if ($passengerOnFloor = $this->getPassengerOnFloor($this->elevator->getCurrentFloor())) {
-                    if ($this->elevator->getDirection() === $this->getPassengerDirection($passengerOnFloor)) {
-                        $this->elevator->takePassenger(reset($passengerOnFloor));
-                        $this->elevator->moveTo(reset($passengerOnFloor));
-                        unset($this->passengers[key($passengerOnFloor)]);
-                    }
+                if ($passengersOnFloor && $this->elevator->checkWeight()) {
+                    $this->elevator->takePassengers($passengersOnFloor);
+                    $this->passengers->deletePassengers(array_keys($passengersOnFloor));
                 }
                 $this->elevator->close();
-                if (!count($this->passengers) || !count($this->elevator->getPassengers())) {
-                    continue;
-                }
+            }
+            if (!$this->checkForUndeliveredPassengers()) {
+                break;
+            } elseif (!count($this->elevator->getPassengers()) && !$this->passengers->checkPassengerByDirection($this->elevator->getCurrentFloor(), $this->elevator->getDirection())) {
+                $this->elevator->changeDirection();
             }
             $this->elevator->goToDirection();
-        } while (count($this->passengers) || count($this->elevator->getPassengers()));
+        }
+    }
+
+    /**
+     * @param OutputInterface $output
+     */
+    private function showPassengers(OutputInterface $output): void
+    {
+        foreach ($this->passengers->getPassengers() as $key => $passenger) {
+            $output->writeln('Пассажир №'. $key . ' находится на ' . $passenger->getStartFloor() . ' этаже и направляется на ' . $passenger->getDestFloor() . ' этаж');
+        }
+        $output->writeln(str_pad('',60, '-'));
     }
 
     /**
      * @return bool
      */
-    private function checkPassengersOnTheFloorAndInTheElevator(): bool
+    private function checkForUndeliveredPassengers(): bool
     {
-        $passenger = $this->getPassengerOnFloor($this->elevator->getCurrentFloor());
-        return ($passenger &&
-            ($this->elevator->getDirection() === $this->getPassengerDirection($passenger))) ||
-            $this->elevator->setDownPassengersOnFloor();
+        return count($this->passengers->getPassengers()) || count($this->elevator->getPassengers());
+    }
+
+    /**
+     * @return array|null
+     */
+    private function checkPassengersOnTheFloor(): ?array
+    {
+        if (($passengers = $this->getPassengersOnFloor($this->elevator->getCurrentFloor()))) {
+            return $passengers;
+        }
+        return null;
+    }
+
+    /**
+     * @return array|null
+     */
+    private function checkPassengersInTheElevator(): ?array
+    {
+        return $this->elevator->setDownPassengersOnFloor();
     }
 
     /**
      * @param int $floor
      * @return array|null
      */
-    private function getPassengerOnFloor(int $floor): ?array
+    private function getPassengersOnFloor(int $floor): ?array
     {
-        foreach ($this->passengers as $key => $passenger) {
-            if ($passenger['startFloor'] == $floor) {
-                return [$key => $passenger];
+        $passengers = [];
+        foreach ($this->passengers->getPassengers() as $key => $passenger) {
+            if (($passenger->getStartFloor() == $floor) && ($passenger->getDirection() == $this->elevator->getDirection())) {
+                $passengers[$key] = $passenger;
             }
         }
-        return null;
-    }
-
-    /**
-     * @param array $passenger
-     * @return int
-     */
-    private function getPassengerDirection(array $passenger): int
-    {
-        $passenger = reset($passenger);
-        return $passenger['startFloor'] < $passenger['destFloor'] ? ElevatorEnum::DIRECTION_UP : ElevatorEnum::DIRECTION_DOWN;
+        return count($passengers) ? $passengers : null;
     }
 }

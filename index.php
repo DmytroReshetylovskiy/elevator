@@ -7,10 +7,6 @@ use Elevator\Command\RunElevatorCommand;
 
 $application = new Application();
 
-$application->add(new RunElevatorCommand([
-    ['startFloor' => 1, 'destFloor' => 4],
-    ['startFloor' => 3, 'destFloor' => 2],
-    ['startFloor' => 4, 'destFloor' => 1],
-]));
+$application->add(new RunElevatorCommand());
 
 $application->run();

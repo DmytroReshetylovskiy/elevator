@@ -3,14 +3,14 @@
 namespace Elevator\Enum;
 
 /**
- * Class ElevatorEnum
+ * Class PassengerStatusEnum
  * @package Elevator\Enum
  */
-class ElevatorEnum
+class PassengerStatusEnum
 {
     /** @var int */
-    const DIRECTION_UP = 1;
+    const VIP = 1;
 
     /** @var int */
-    const DIRECTION_DOWN = 2;
+    const REGULAR = 2;
 }
