@@ -118,7 +118,7 @@ class Elevator
         return $this;
     }
 
-    public function checkWeight()
+    public function checkWeight(): bool
     {
         return $this->getCurrentWeight() < self::MAX_WEIGHT ? true : false;
     }
@@ -141,7 +141,9 @@ class Elevator
     public function takePassengers(array $passengers): void
     {
         $this->sleep(self::TAKE_AND_SET_DOWN);
-        $this->getPassengerInElevator(count($passengers), ['-го пассажира', '-х пассажиров', ' пассажиров']);
+        $passengerOnTheFloor = count($passengers);
+        $freeSpace = $this->getFreeSpace();
+        $this->getPassengerInElevator($passengerOnTheFloor > $freeSpace ? $freeSpace : $passengerOnTheFloor, ['-го пассажира', '-х пассажиров', ' пассажиров']);
         /** @var  Passenger $passenger */
         foreach ($passengers as $key => $passenger) {
             if ($this->checkWeight()) {
@@ -150,6 +152,15 @@ class Elevator
                 $this->addWeight($passenger->getWeight());
             }
         }
+    }
+
+    /**
+     * @return int
+     */
+    private function getFreeSpace(): int
+    {
+        $freeWeight = self::MAX_WEIGHT - $this->getCurrentWeight();
+        return $freeWeight / Passenger::WEIGHT;
     }
 
     /**
@@ -216,5 +227,10 @@ class Elevator
     private function sleep(int $value): void
     {
         sleep($value);
+    }
+
+    public function changeDirection(): void
+    {
+        $this->setDirection($this->getDirection() == ElevatorEnum::DIRECTION_UP ? ElevatorEnum::DIRECTION_DOWN : ElevatorEnum::DIRECTION_UP );
     }
 }

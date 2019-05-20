@@ -19,7 +19,7 @@ class PassengerManager
     /**
      * @return PassengerManager
      */
-    private static function getInstance()
+    private static function getInstance(): PassengerManager
     {
         return self::$instance ?? static::$instance = new self();
     }
@@ -48,7 +48,10 @@ class PassengerManager
         array_push($this->passengers, $passenger);
     }
 
-    public function deletePassengers(array $passengersIds)
+    /**
+     * @param array $passengersIds
+     */
+    public function deletePassengers(array $passengersIds): void
     {
         foreach ($passengersIds as $passengerId) {
             unset($this->passengers[$passengerId]);
@@ -59,7 +62,7 @@ class PassengerManager
      * @param int $value
      * @return PassengerManager
      */
-    public static function generatePassengers(int $value)
+    public static function generatePassengers(int $value): PassengerManager
     {
         $passengerManager = self::getInstance();
         for ($i = 0; $i < $value; $i++) {
@@ -71,6 +74,21 @@ class PassengerManager
             $passengerManager->addPassenger(new Passenger($startFloor, $destFloor, $status));
         }
         return $passengerManager;
+    }
+
+    /**
+     * @param int $floor
+     * @param int $direction
+     * @return bool
+     */
+    public function checkPassengerByDirection(int $floor, int $direction): bool
+    {
+        foreach ($this->getPassengers() as $passenger) {
+            if ($passenger->checkByDirection($floor, $direction)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
 

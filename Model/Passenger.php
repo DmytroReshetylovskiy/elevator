@@ -11,6 +11,8 @@ use Elevator\Enum\PassengerStatusEnum;
  */
 class Passenger
 {
+    const WEIGHT = 70;
+
     /** @var int */
     private $startFloor;
 
@@ -19,9 +21,6 @@ class Passenger
 
     /** @var int */
     private $status;
-
-    /** @var int */
-    private $weight = 70;
 
     /**
      * Passenger constructor.
@@ -89,7 +88,7 @@ class Passenger
      */
     public function getWeight(): int
     {
-        return $this->weight;
+        return self::WEIGHT;
     }
 
     /**
@@ -98,5 +97,21 @@ class Passenger
     public function getDirection(): int
     {
         return $this->startFloor < $this->destFloor ? ElevatorEnum::DIRECTION_UP : ElevatorEnum::DIRECTION_DOWN;
+    }
+
+    /**
+     * @param int $floor
+     * @param int $direction
+     * @return bool
+     */
+    public function checkByDirection(int $floor, int $direction): bool
+    {
+        if (
+            $direction == ElevatorEnum::DIRECTION_UP && $floor < $this->getStartFloor() ||
+            $direction == ElevatorEnum::DIRECTION_DOWN && $floor > $this->getStartFloor()
+        ) {
+            return true;
+        }
+        return false;
     }
 }

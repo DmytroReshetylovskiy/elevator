@@ -38,6 +38,7 @@ class RunElevatorCommand extends Command
     {
         parent::initialize($input, $output);
         $this->elevator = new Elevator($output);
+        $this->showPassengers($output);
     }
 
     /**
@@ -51,12 +52,12 @@ class RunElevatorCommand extends Command
             $this->elevator->checkLastFloorInDirection();
             $passengersOnFloor = $this->checkPassengersOnTheFloor();
             $passengersInElevator = $this->checkPassengersInTheElevator();
-            if (($passengersOnFloor || $passengersInElevator)/* && $this->elevator->checkWeight()*/) {
+            if (($passengersOnFloor && $this->elevator->checkWeight()) || $passengersInElevator) {
                 $this->elevator->open();
                 if ($passengersInElevator) {
                     $this->elevator->setDownPassengers($passengersInElevator);
                 }
-                if ($passengersOnFloor) {
+                if ($passengersOnFloor && $this->elevator->checkWeight()) {
                     $this->elevator->takePassengers($passengersOnFloor);
                     $this->passengers->deletePassengers(array_keys($passengersOnFloor));
                 }
@@ -64,9 +65,22 @@ class RunElevatorCommand extends Command
             }
             if (!$this->checkForUndeliveredPassengers()) {
                 break;
+            } elseif (!count($this->elevator->getPassengers()) && !$this->passengers->checkPassengerByDirection($this->elevator->getCurrentFloor(), $this->elevator->getDirection())) {
+                $this->elevator->changeDirection();
             }
             $this->elevator->goToDirection();
         }
+    }
+
+    /**
+     * @param OutputInterface $output
+     */
+    private function showPassengers(OutputInterface $output): void
+    {
+        foreach ($this->passengers->getPassengers() as $key => $passenger) {
+            $output->writeln('Пассажир №'. $key . ' находится на ' . $passenger->getStartFloor() . ' этаже и направляется на ' . $passenger->getDestFloor() . ' этаж');
+        }
+        $output->writeln(str_pad('',60, '-'));
     }
 
     /**
